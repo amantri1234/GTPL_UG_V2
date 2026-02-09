@@ -32,7 +32,12 @@ public class Application {
     
     public static void main(String[] args) {
         // Initialize database connection pool
-        DatabaseConfig.initialize();
+        try {
+            DatabaseConfig.initialize();
+        } catch (Exception e) {
+            System.err.println("⚠️ Database not available. Application will start, but DB features disabled.");
+        }
+
         
         // Create and configure Javalin application
         Javalin app = createApplication();
@@ -117,8 +122,14 @@ public class Application {
         
         // Health check endpoint for Railway
         app.get("/health", ctx -> {
-            ctx.json(new HealthResponse("UP", "1.0.0", System.currentTimeMillis()));
+            boolean dbHealthy = DatabaseConfig.isHealthy();
+            ctx.json(new HealthResponse(
+            dbHealthy ? "UP" : "DEGRADED",
+            "1.0.0",
+            System.currentTimeMillis()
+            ));
         });
+
         
         // Vendor registration (public)
         app.get("/signup", authController::showSignupPage);
