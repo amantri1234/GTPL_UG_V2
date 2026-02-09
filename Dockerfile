@@ -10,9 +10,9 @@ WORKDIR /app
 COPY backend/build.gradle backend/settings.gradle backend/gradlew ./
 COPY backend/gradle ./gradle
 
-RUN chmod +x gradlew
+
 # Download dependencies
-RUN ./gradlew dependencies --no-daemon || true
+RUN gradle shadowJar --no-daemon -x test
 
 # Copy source code
 COPY backend/src ./src
