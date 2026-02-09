@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(${title}, ~{::section})}">
+<section>
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">Vendor Dashboard</h1>
+        <div class="page-actions">
+            <a href="/vendor/daily-report" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Submit Daily Report
+            </a>
+        </div>
+    </div>
+    
+    <!-- Welcome Banner -->
+    <div class="card" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-light)); color: white; margin-bottom: 1.5rem;">
+        <div class="card-body">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="color: white; margin-bottom: 0.5rem;">Welcome back, <span th:text="${userName}">Vendor</span>!</h2>
+                    <p style="color: rgba(255,255,255,0.8); margin: 0;">Here's what's happening with your projects today.</p>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 2rem; font-weight: 700;" th:text="${overallProgress} + '%'">0%</div>
+                    <div style="color: rgba(255,255,255,0.8);">Overall Progress</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="fas fa-project-diagram"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" th:text="${totalProjects}">0</div>
+                <div class="stat-label">Total Projects</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="fas fa-spinner"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" th:text="${activeProjects}">0</div>
+                <div class="stat-label">Active Projects</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" th:text="${completedProjects}">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon info">
+                <i class="fas fa-road"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" th:text="${totalKmCompleted}">0</div>
+                <div class="stat-label">KM Completed</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon secondary">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" th:text="${pendingMaterialRequests}">0</div>
+                <div class="stat-label">Pending Requests</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon danger">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" th:text="${unreadNotifications}">0</div>
+                <div class="stat-label">Notifications</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- KM Progress Widget -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">KM Progress Overview</h3>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; text-align: center;">
+                <div>
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--primary-color);" th:text="${totalKmAssigned}">0</div>
+                    <div style="color: var(--text-secondary); font-size: 0.875rem;">Total KM Assigned</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--success-color);" th:text="${totalKmCompleted}">0</div>
+                    <div style="color: var(--text-secondary); font-size: 0.875rem;">KM Completed</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--warning-color);" th:text="${totalKmRemaining}">0</div>
+                    <div style="color: var(--text-secondary); font-size: 0.875rem;">KM Remaining</div>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem;">
+                <div class="progress" style="height: 1rem;">
+                    <div class="progress-bar" th:style="'width:' + ${overallProgress} + '%'"
+                         th:classappend="${overallProgress >= 80 ? 'success' : overallProgress >= 50 ? 'warning' : ''}"></div>
+                </div>
+                <div style="text-align: center; margin-top: 0.5rem; font-weight: 600;" th:text="'Overall Progress: ' + ${overallProgress} + '%'">Overall Progress: 0%</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Active Projects -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Active Projects</h3>
+            <a href="/vendor/projects" class="btn btn-sm btn-outline">View All</a>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Project Code</th>
+                            <th>Name</th>
+                            <th>Total KM</th>
+                            <th>Completed</th>
+                            <th>Progress</th>
+                            <th>Deadline</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="project : ${activeProjectsList}" th:if="${activeProjectsList != null}">
+                            <td th:text="${project.projectCode}">PRJ-2024-00001</td>
+                            <td th:text="${project.projectName}">Project Name</td>
+                            <td th:text="${project.totalKm}">100</td>
+                            <td th:text="${project.completedKm}">50</td>
+                            <td>
+                                <div class="progress">
+                                    <div class="progress-bar" th:style="'width:' + ${project.progressPercentage} + '%'"></div>
+                                </div>
+                                <small th:text="${project.progressPercentage} + '%'">50%</small>
+                            </td>
+                            <td th:text="${project.expectedEndDate}">2024-12-31</td>
+                        </tr>
+                        <tr th:if="${activeProjectsList == null or activeProjectsList.isEmpty()}">
+                            <td colspan="6" class="text-center">No active projects</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Projects Needing Update -->
+    <div class="card" th:if="${projectsNeedingUpdate != null and !projectsNeedingUpdate.isEmpty()}">
+        <div class="card-header" style="background: rgba(239, 68, 68, 0.1);">
+            <h3 class="card-title" style="color: var(--danger-color);">
+                <i class="fas fa-exclamation-circle"></i> Projects Needing Daily Update
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Project Code</th>
+                            <th>Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="project : ${projectsNeedingUpdate}">
+                            <td th:text="${project.projectCode}">PRJ-2024-00001</td>
+                            <td th:text="${project.projectName}">Project Name</td>
+                            <td>
+                                <a th:href="@{/vendor/daily-report(projectId=${project.id})}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Submit Report
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Quick Actions</h3>
+        </div>
+        <div class="card-body">
+            <div class="quick-actions">
+                <a href="/vendor/daily-report" class="btn btn-outline">
+                    <i class="fas fa-edit"></i> Daily Report
+                </a>
+                <a href="/vendor/material-requests/create" class="btn btn-outline">
+                    <i class="fas fa-plus-circle"></i> Request Material
+                </a>
+                <a href="/vendor/projects" class="btn btn-outline">
+                    <i class="fas fa-project-diagram"></i> My Projects
+                </a>
+                <a href="/vendor/notifications" class="btn btn-outline">
+                    <i class="fas fa-bell"></i> Notifications
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</section>
+</html>

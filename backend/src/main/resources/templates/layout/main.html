@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title, content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">GTPL_UG Management System</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive.css}">
+    
+    <!-- Chart.js for charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" th:if="${userName != null}">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-network-wired"></i>
+                    <span>GTPL_UG</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <!-- Admin Navigation -->
+                <th:block th:if="${userRole == 'Administrator'}">
+                    <a href="/admin/dashboard" class="nav-item" th:classappend="${#httpServletRequest.requestURI == '/admin/dashboard'} ? 'active'">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/admin/projects" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/admin/projects')} ? 'active'">
+                        <i class="fas fa-project-diagram"></i>
+                        <span>Projects</span>
+                    </a>
+                    <a href="/admin/vendors" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/admin/vendors')} ? 'active'">
+                        <i class="fas fa-users"></i>
+                        <span>Vendors</span>
+                    </a>
+                    <a href="/admin/materials" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/admin/materials')} ? 'active'">
+                        <i class="fas fa-boxes"></i>
+                        <span>Materials</span>
+                    </a>
+                    <a href="/admin/material-requests" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/admin/material-requests')} ? 'active'">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Material Requests</span>
+                    </a>
+                    <a href="/admin/daily-progress" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/admin/daily-progress')} ? 'active'">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Daily Progress</span>
+                    </a>
+                    <a href="/admin/compliance" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/admin/compliance')} ? 'active'">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Compliance</span>
+                    </a>
+                    <a href="/admin/reports" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/admin/reports')} ? 'active'">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Reports</span>
+                    </a>
+                </th:block>
+                
+                <!-- Vendor Navigation -->
+                <th:block th:if="${userRole == 'Vendor'}">
+                    <a href="/vendor/dashboard" class="nav-item" th:classappend="${#httpServletRequest.requestURI == '/vendor/dashboard'} ? 'active'">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/vendor/projects" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/vendor/projects')} ? 'active'">
+                        <i class="fas fa-project-diagram"></i>
+                        <span>My Projects</span>
+                    </a>
+                    <a href="/vendor/daily-report" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/vendor/daily-report')} ? 'active'">
+                        <i class="fas fa-edit"></i>
+                        <span>Daily Report</span>
+                    </a>
+                    <a href="/vendor/daily-report/history" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/vendor/daily-report/history')} ? 'active'">
+                        <i class="fas fa-history"></i>
+                        <span>Report History</span>
+                    </a>
+                    <a href="/vendor/material-requests" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/vendor/material-requests')} ? 'active'">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Material Requests</span>
+                    </a>
+                    <a href="/vendor/notifications" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/vendor/notifications')} ? 'active'">
+                        <i class="fas fa-bell"></i>
+                        <span>Notifications</span>
+                    </a>
+                </th:block>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="/logout" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content" th:classappend="${userName == null} ? 'full-width'">
+            <!-- Header -->
+            <header class="header" th:if="${userName != null}">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="header-right">
+                    <div class="notifications">
+                        <a href="/vendor/notifications" class="notification-btn">
+                            <i class="fas fa-bell"></i>
+                            <span class="badge" th:if="${unreadNotifications > 0}" th:text="${unreadNotifications}">0</span>
+                        </a>
+                    </div>
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <span class="user-name" th:text="${userName}">User</span>
+                            <span class="user-role" th:text="${userRole}">Role</span>
+                        </div>
+                        <a th:href="${userRole == 'Administrator'} ? '/admin/profile' : '/vendor/profile'" class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </a>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Page Content -->
+            <div class="page-content">
+                <th:block th:replace="${content}"></th:block>
+            </div>
+        </main>
+    </div>
+    
+    <!-- JavaScript -->
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>

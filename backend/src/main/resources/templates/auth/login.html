@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">Login - GTPL_UG Management System</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="fas fa-network-wired"></i>
+                </div>
+                <h1>GTPL_UG</h1>
+                <p>Management System</p>
+            </div>
+            
+            <div class="auth-body">
+                <h2>Welcome Back</h2>
+                <p class="auth-subtitle">Sign in to your account</p>
+                
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+                <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+                
+                <form action="/login" method="post" class="auth-form">
+                    <div class="form-group">
+                        <label for="username">
+                            <i class="fas fa-user"></i>
+                            Username / Email
+                        </label>
+                        <input type="text" id="username" name="username" class="form-control" 
+                               placeholder="Enter username or email" required autofocus>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i>
+                            Password
+                        </label>
+                        <div class="password-input">
+                            <input type="password" id="password" name="password" class="form-control" 
+                                   placeholder="Enter password" required>
+                            <button type="button" class="toggle-password" onclick="togglePassword()">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="remember">
+                            <span>Remember me</span>
+                        </label>
+                        <a href="/forgot-password" class="forgot-link">Forgot password?</a>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
+                    </button>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="/signup">Register as Vendor</a></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="auth-info">
+            <div class="info-content">
+                <h2>Underground Infrastructure Management</h2>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> Project & Work Assignment</li>
+                    <li><i class="fas fa-check"></i> KM-wise Progress Tracking</li>
+                    <li><i class="fas fa-check"></i> Material Management</li>
+                    <li><i class="fas fa-check"></i> Daily Reporting</li>
+                    <li><i class="fas fa-check"></i> Performance Analytics</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleBtn = document.querySelector('.toggle-password i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.classList.remove('fa-eye');
+                toggleBtn.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.classList.remove('fa-eye-slash');
+                toggleBtn.classList.add('fa-eye');
+            }
+        }
+    </script>
+</body>
+</html>

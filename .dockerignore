@@ -1,0 +1,23 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local database files (don't include in build)
+*.sql
+
+# Railway config (not needed in image)
+railway.toml
+nixpacks.toml

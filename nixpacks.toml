@@ -1,0 +1,8 @@
+[phases.build]
+cmds = ["cd backend && ./gradlew shadowJar --no-daemon -x test"]
+
+[phases.setup]
+nixPkgs = ["jdk17"]
+
+[start]
+cmd = "java -Dserver.port=${PORT} -jar backend/build/libs/gtpl-ug-system.jar"
