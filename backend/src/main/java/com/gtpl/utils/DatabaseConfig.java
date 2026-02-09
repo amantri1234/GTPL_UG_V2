@@ -21,9 +21,7 @@ import java.sql.SQLException;
 public class DatabaseConfig {
     
     // Default configuration values
-    private static final String DEFAULT_DB_URL = "jdbc:mysql://localhost:3306/gtpl_ug_system?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-    private static final String DEFAULT_DB_USER = "root";
-    private static final String DEFAULT_DB_PASSWORD = "password";
+   
     private static final String DEFAULT_DB_DRIVER = "com.mysql.cj.jdbc.Driver";
     
     // Connection pool settings
@@ -84,8 +82,9 @@ public class DatabaseConfig {
             System.out.println("Pool Size: " + MAX_POOL_SIZE);
             
         } catch (Exception e) {
-            System.err.println("Failed to initialize database connection pool: " + e.getMessage());
-            throw new RuntimeException("Database initialization failed", e);
+            System.err.println("⚠️ Database initialization failed. App will continue running.");
+            System.err.println("Reason: " + e.getMessage());
+            dataSource = null;
         }
     }
     
@@ -97,7 +96,7 @@ public class DatabaseConfig {
      */
     public static Connection getConnection() throws SQLException {
         if (dataSource == null || dataSource.isClosed()) {
-            throw new SQLException("Database connection pool is not initialized");
+            throw new SQLException("Database is currently unavailable");
         }
         return dataSource.getConnection();
     }
@@ -134,34 +133,20 @@ public class DatabaseConfig {
     // Private helper methods to get configuration values
     
     private static String getDbUrl() {
-        // Check for Railway's DATABASE_URL first
-        String railwayUrl = System.getenv("DATABASE_URL");
-        if (railwayUrl != null && !railwayUrl.isEmpty()) {
-            // Convert Railway's mysql:// URL to jdbc:mysql:// format
-            if (railwayUrl.startsWith("mysql://")) {
-                return railwayUrl.replace("mysql://", "jdbc:mysql://") + "?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-            }
-            return railwayUrl;
-        }
-        
-        // Check for standard DB_URL
-        String url = System.getenv("DB_URL");
-        if (url != null && !url.isEmpty()) {
-            return url;
-        }
-        
-        // Build URL from individual Railway MySQL variables
         String host = System.getenv("MYSQLHOST");
         String port = System.getenv("MYSQLPORT");
         String database = System.getenv("MYSQLDATABASE");
-        
-        if (host != null && port != null && database != null) {
-            return String.format("jdbc:mysql://%s:%s/%s?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true", 
-                host, port, database);
+
+        if (host == null || port == null || database == null) {
+            throw new RuntimeException("Railway MySQL environment variables are missing");
         }
-        
-        return System.getProperty("db.url", DEFAULT_DB_URL);
+
+        return String.format(
+            "jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true",
+            host, port, database
+        );
     }
+
     
     private static String getDbUser() {
         // Check for Railway's MYSQLUSER
@@ -175,7 +160,7 @@ public class DatabaseConfig {
             return user;
         }
         
-        return System.getProperty("db.user", DEFAULT_DB_USER);
+        throw new RuntimeException("MYSQLUSER is not set");
     }
     
     private static String getDbPassword() {
@@ -190,7 +175,7 @@ public class DatabaseConfig {
             return password;
         }
         
-        return System.getProperty("db.password", DEFAULT_DB_PASSWORD);
+        throw new RuntimeException("MYSQLPASSWORD is not set");
     }
     
     private static String getDbDriver() {
