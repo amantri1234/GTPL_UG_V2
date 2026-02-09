@@ -11,14 +11,12 @@ COPY backend/build.gradle backend/settings.gradle backend/gradlew ./
 COPY backend/gradle ./gradle
 
 
-# Download dependencies
-RUN gradle shadowJar --no-daemon -x test
 
 # Copy source code
 COPY backend/src ./src
 
 # Build the application
-RUN ./gradlew shadowJar --no-daemon -x test
+RUN gradle shadowJar --no-daemon -x test
 
 # Stage 2: Runtime
 FROM eclipse-temurin:17-jre-alpine
