@@ -213,7 +213,7 @@ public class DashboardController {
         List<DailyProgress> allProgress = dailyProgressDAO.findAll();
         
         Map<LocalDate, BigDecimal> dailyTotals = new TreeMap<>();
-        for (DailyDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
             dailyTotals.put(date, BigDecimal.ZERO);
         }
         

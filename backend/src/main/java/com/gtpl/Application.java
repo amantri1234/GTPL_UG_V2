@@ -81,12 +81,13 @@ public class Application {
             config.plugins.enableDevLogging();
             
             // CORS configuration for API endpoints
-            config.bundledPlugins.enableCors(cors -> {
-                cors.addRule(corsRule -> {
-                    corsRule.allowHost("http://localhost:3000"); // React dev server
-                    corsRule.allowHost("http://localhost:8080");
+            config.plugins.enableCors(cors -> {
+                cors.add(corsRule -> {
+                corsRule.allowHost("http://localhost:3000"); // React dev server
+                corsRule.allowHost("http://localhost:8080");
                 });
             });
+
         });
     }
     

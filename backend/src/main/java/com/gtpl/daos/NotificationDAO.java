@@ -5,7 +5,9 @@ import com.gtpl.utils.DatabaseConfig;
 
 import java.sql.*;
 import java.util.List;
-import java.util.Optional;
+
+import java.util.ArrayList;
+
 
 /**
  * Notification DAO Class
