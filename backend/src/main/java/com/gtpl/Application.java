@@ -97,7 +97,8 @@ public class Application {
                     id INT PRIMARY KEY AUTO_INCREMENT,
                     username VARCHAR(50) UNIQUE NOT NULL,
                     email VARCHAR(100) UNIQUE NOT NULL,
-                    password VARCHAR(255) NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL,
+                    is_active BOOLEAN DEFAULT TRUE,
                     full_name VARCHAR(100),
                     phone VARCHAR(20),
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -113,7 +114,7 @@ public class Application {
                     user_id INT,
                     username VARCHAR(50) UNIQUE NOT NULL,
                     email VARCHAR(100) UNIQUE NOT NULL,
-                    password VARCHAR(255) NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL,
                     company_name VARCHAR(200),
                     contact_person VARCHAR(100),
                     phone VARCHAR(20),
@@ -290,7 +291,7 @@ public class Application {
             
             // Insert default admin account
             stmt.execute("""
-                INSERT INTO admins (username, email, password, full_name) VALUES
+                INSERT INTO admins (username, email, password_hash, full_name) VALUES
                 ('admin', 'admin@gtpl.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'System Administrator')
                 ON DUPLICATE KEY UPDATE username=username
             """);
