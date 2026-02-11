@@ -30,7 +30,7 @@ public class AdminDAO extends BaseDAO<Admin, Long> {
         Admin admin = new Admin();
         admin.setId(rs.getLong("id"));
         admin.setUsername(rs.getString("username"));
-        admin.setPasswordHash(rs.getString("password"));
+        admin.setPasswordHash(rs.getString("password_hash"));
         admin.setFullName(rs.getString("full_name"));
         admin.setEmail(rs.getString("email"));
         admin.setPhone(rs.getString("phone"));
@@ -111,7 +111,7 @@ public class AdminDAO extends BaseDAO<Admin, Long> {
      * @return true if updated
      */
     public boolean updatePassword(Long adminId, String newPasswordHash) {
-        String sql = "UPDATE admins SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        String sql = "UPDATE admins SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
         return executeUpdate(sql, newPasswordHash, adminId) > 0;
     }
     
