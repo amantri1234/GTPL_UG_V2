@@ -7,6 +7,7 @@ import com.gtpl.utils.ViewEngineConfig;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinThymeleaf;
+import java.sql.*;  // ADD THIS IMPORT
 
 /**
  * GTPL_UG Management System - Main Application Class
@@ -34,6 +35,10 @@ public class Application {
         // Initialize database connection pool
         try {
             DatabaseConfig.initialize();
+            
+            // ADD THIS LINE - Initialize database schema
+            initializeDatabaseSchema();
+            
         } catch (Exception e) {
             System.err.println("⚠️ Database not available. Application will start, but DB features disabled.");
         }
@@ -62,6 +67,263 @@ public class Application {
             DatabaseConfig.close();
         }));
     }
+    
+    // =====================================================
+    // ADD THIS ENTIRE METHOD AFTER main() METHOD
+    // =====================================================
+    
+    /**
+     * Initializes database schema by creating all required tables if they don't exist.
+     * This method is called automatically on application startup.
+     */
+    private static void initializeDatabaseSchema() {
+        System.out.println("=== Checking Database Schema ===");
+        
+        try (Connection conn = DatabaseConfig.getConnection();
+             Statement stmt = conn.createStatement()) {
+            
+            // Check if tables already exist
+            ResultSet rs = stmt.executeQuery("SHOW TABLES LIKE 'vendors'");
+            if (rs.next()) {
+                System.out.println("✓ Database tables already exist");
+                return;
+            }
+            
+            System.out.println("⚠ Tables not found. Creating database schema...");
+            
+            // Create admins table
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS admins (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    username VARCHAR(50) UNIQUE NOT NULL,
+                    email VARCHAR(100) UNIQUE NOT NULL,
+                    password VARCHAR(255) NOT NULL,
+                    full_name VARCHAR(100),
+                    phone VARCHAR(20),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            """);
+            System.out.println("✓ Created admins table");
+            
+            // Create vendors table
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS vendors (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    user_id INT,
+                    username VARCHAR(50) UNIQUE NOT NULL,
+                    email VARCHAR(100) UNIQUE NOT NULL,
+                    password VARCHAR(255) NOT NULL,
+                    company_name VARCHAR(200),
+                    contact_person VARCHAR(100),
+                    phone VARCHAR(20),
+                    address TEXT,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    is_verified BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            """);
+            System.out.println("✓ Created vendors table");
+            
+            // Create projects table
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS projects (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    project_name VARCHAR(200) NOT NULL,
+                    project_code VARCHAR(50) UNIQUE,
+                    location VARCHAR(200),
+                    description TEXT,
+                    start_date DATE,
+                    end_date DATE,
+                    total_km DECIMAL(10,2),
+                    completed_km DECIMAL(10,2) DEFAULT 0,
+                    status ENUM('PLANNING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'ON_HOLD') DEFAULT 'PLANNING',
+                    budget DECIMAL(15,2),
+                    created_by INT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (created_by) REFERENCES admins(id)
+                )
+            """);
+            System.out.println("✓ Created projects table");
+            
+            // Create work_assignments table
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS work_assignments (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    project_id INT NOT NULL,
+                    vendor_id INT NOT NULL,
+                    assigned_km DECIMAL(10,2),
+                    start_date DATE,
+                    end_date DATE,
+                    status ENUM('ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED') DEFAULT 'ASSIGNED',
+                    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (project_id) REFERENCES projects(id),
+                    FOREIGN KEY (vendor_id) REFERENCES vendors(id)
+                )
+            """);
+            System.out.println("✓ Created work_assignments table");
+            
+            // Create materials table
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS materials (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    material_name VARCHAR(200) NOT NULL,
+                    material_code VARCHAR(50) UNIQUE,
+                    category VARCHAR(100),
+                    unit VARCHAR(50),
+                    unit_price DECIMAL(10,2),
+                    stock_quantity INT DEFAULT 0,
+                    min_stock_level INT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            """);
+            System.out.println("✓ Created materials table");
+            
+            // Create project_materials table
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS project_materials (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    project_id INT NOT NULL,
+                    material_id INT NOT NULL,
+                    allocated_quantity INT,
+                    used_quantity INT DEFAULT 0,
+                    FOREIGN KEY (project_id) REFERENCES projects(id),
+                    FOREIGN KEY (material_id) REFERENCES materials(id)
+                )
+            """);
+            System.out.println("✓ Created project_materials table");
+            
+            // Create material_requests table
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS material_requests (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    vendor_id INT NOT NULL,
+                    project_id INT NOT NULL,
+                    material_id INT NOT NULL,
+                    requested_quantity INT,
+                    approved_quantity INT,
+                    status ENUM('PENDING', 'APPROVED', 'REJECTED', 'DELIVERED') DEFAULT 'PENDING',
+                    request_date DATE,
+                    approved_by INT,
+                    approved_at TIMESTAMP NULL,
+                    notes TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (vendor_id) REFERENCES vendors(id),
+                    FOREIGN KEY (project_id) REFERENCES projects(id),
+                    FOREIGN KEY (material_id) REFERENCES materials(id),
+                    FOREIGN KEY (approved_by) REFERENCES admins(id)
+                )
+            """);
+            System.out.println("✓ Created material_requests table");
+            
+            // Create daily_progress table
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS daily_progress (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    vendor_id INT NOT NULL,
+                    project_id INT NOT NULL,
+                    report_date DATE NOT NULL,
+                    work_description TEXT,
+                    km_completed DECIMAL(10,2),
+                    workers_count INT,
+                    equipment_used TEXT,
+                    weather_conditions VARCHAR(100),
+                    issues_faced TEXT,
+                    photos_uploaded BOOLEAN DEFAULT FALSE,
+                    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    is_verified BOOLEAN DEFAULT FALSE,
+                    verified_by INT,
+                    verified_at TIMESTAMP NULL,
+                    FOREIGN KEY (vendor_id) REFERENCES vendors(id),
+                    FOREIGN KEY (project_id) REFERENCES projects(id),
+                    FOREIGN KEY (verified_by) REFERENCES admins(id),
+                    UNIQUE KEY unique_daily_report (vendor_id, project_id, report_date)
+                )
+            """);
+            System.out.println("✓ Created daily_progress table");
+            
+            // Create notifications table
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    user_type ENUM('ADMIN', 'VENDOR') NOT NULL,
+                    user_id INT NOT NULL,
+                    title VARCHAR(200),
+                    message TEXT,
+                    type VARCHAR(50),
+                    is_read BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_user (user_type, user_id, is_read)
+                )
+            """);
+            System.out.println("✓ Created notifications table");
+            
+            // Create audit_logs table
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS audit_logs (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    user_type ENUM('ADMIN', 'VENDOR'),
+                    user_id INT,
+                    action VARCHAR(100),
+                    table_name VARCHAR(100),
+                    record_id INT,
+                    changes TEXT,
+                    ip_address VARCHAR(45),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """);
+            System.out.println("✓ Created audit_logs table");
+            
+            // Create system_config table
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS system_config (
+                    config_key VARCHAR(100) PRIMARY KEY,
+                    config_value TEXT,
+                    description TEXT,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            """);
+            System.out.println("✓ Created system_config table");
+            
+            // Insert default admin account
+            stmt.execute("""
+                INSERT INTO admins (username, email, password, full_name) VALUES
+                ('admin', 'admin@gtpl.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'System Administrator')
+                ON DUPLICATE KEY UPDATE username=username
+            """);
+            System.out.println("✓ Created default admin user");
+            
+            // Insert system configuration
+            stmt.execute("""
+                INSERT INTO system_config (config_key, config_value, description) VALUES
+                ('SESSION_TIMEOUT_MINUTES', '120', 'Session timeout in minutes'),
+                ('PASSWORD_RESET_EXPIRY_HOURS', '24', 'Password reset token expiry in hours'),
+                ('DAILY_UPDATE_CUTOFF_TIME', '18:00', 'Daily report submission deadline'),
+                ('MAX_LOGIN_ATTEMPTS', '5', 'Maximum failed login attempts before lockout')
+                ON DUPLICATE KEY UPDATE config_key=config_key
+            """);
+            System.out.println("✓ Created system configuration");
+            
+            System.out.println("=== Database Schema Created Successfully! ===");
+            System.out.println("Default Admin Login:");
+            System.out.println("  Username: admin");
+            System.out.println("  Password: Admin@123");
+            
+        } catch (SQLException e) {
+            System.err.println("❌ Failed to initialize database schema:");
+            System.err.println("Error Code: " + e.getErrorCode());
+            System.err.println("SQL State: " + e.getSQLState());
+            System.err.println("Message: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    // =====================================================
+    // REST OF YOUR CODE STAYS THE SAME - DON'T CHANGE ANYTHING BELOW
+    // =====================================================
     
     /**
      * Creates and configures the Javalin application instance.
